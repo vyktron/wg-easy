@@ -1,0 +1,26 @@
+---
+- name: Ensure project directory exists
+  ansible.builtin.file:
+    path: "{{ wg_easy_project_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Render docker compose definition
+  ansible.builtin.template:
+    src: "{{ wg_easy_compose_template }}"
+    dest: "{{ wg_easy_project_path }}/{{ wg_easy_compose_filename }}"
+    mode: "0644"
+
+- name: Deploy wg-easy stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ wg_easy_project_path }}"
+    files:
+      - "{{ wg_easy_compose_filename }}"
+    state: present
+    remove_orphans: true
+    build: always
+  register: wg_easy_compose
+
+- name: Display compose status
+  ansible.builtin.debug:
+    var: wg_easy_compose

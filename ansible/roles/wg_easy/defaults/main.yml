@@ -1,0 +1,10 @@
+---
+wg_easy_project_path: /opt/wg-easy
+wg_easy_compose_filename: docker-compose.vyk.yml
+wg_easy_compose_template: "{{ role_path }}/templates/{{ wg_easy_compose_filename }}.j2"
+
+wg_easy_init_username: admin
+wg_easy_init_password: change_me
+wg_easy_init_host: 0.0.0.0
+wg_easy_init_port: 51821
+wg_easy_insecure: false

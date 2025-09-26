@@ -1,0 +1,26 @@
+volumes:
+  etc_wireguard:
+
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:15
+    container_name: wg-easy
+    privileged: true  # Allows the container to create and manage network interfaces
+    environment:
+      - INIT_ENABLED=true
+      - INIT_USERNAME={{ wg_easy_init_username }}
+      - INIT_PASSWORD={{ wg_easy_init_password }}
+      - INIT_HOST={{ wg_easy_init_host }}
+      - INIT_PORT={{ wg_easy_init_port }}
+      - INSECURE={{ (wg_easy_insecure | bool) | ternary('true', 'false') }}
+    volumes:
+      - etc_wireguard:/etc/wireguard
+      - /lib/modules:/lib/modules:ro
+    network_mode: "host"
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE

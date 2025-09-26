@@ -1,0 +1,6 @@
+---
+- name: Deploy wg-easy with Docker Compose
+  hosts: wg_easy
+  become: true
+  roles:
+    - role: wg_easy

@@ -1,3 +1,6 @@
 .DS_Store
 *.swp
 node_modules
+
+# Local Ansible inventory (contains secrets)
+ansible/inventory.ini
