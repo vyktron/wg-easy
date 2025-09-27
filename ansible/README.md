@@ -48,6 +48,7 @@ The playbook uploads `docker-compose.vyk.yml` to `/opt/wg-easy/` (override with 
 - `wg_easy_init_password`: admin password created during bootstrap (`change_me` by default—override this in your inventory or via `-e`).
 - `wg_easy_init_host`: hostname or IP that the wg-easy UI should bind to (`0.0.0.0` by default).
 - `wg_easy_init_port`: port that the wg-easy UI should listen on (`51821` by default).
+- `wg_easy_init_dns`: DNS server to push to clients via WireGuard (`1.1.1.1` by default).
 - `wg_easy_insecure`: whether to skip HTTPS enforcement for the web UI (`false` by default).
 Example override:
 
@@ -58,3 +59,75 @@ ansible-playbook ansible/playbooks/deploy-wg-easy.yml -i inventory.ini \
    -e wg_easy_init_host=127.0.0.1 \
    -e wg_easy_init_port=8080
 ```
+
+## Troubleshooting
+
+If clients can connect to the WireGuard server but cannot access the internet, ensure that IP forwarding and NAT are correctly set up on the host running wg-easy.
+---
+
+### **1. Check IP forwarding**
+
+```bash
+sysctl net.ipv4.ip_forward
+```
+
+* If `0`, enable temporarily:
+
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+```
+
+---
+
+### **2. Add NAT & forwarding rules**
+
+```bash
+sudo iptables -t nat -A POSTROUTING -o wlp0s20f3 -j MASQUERADE
+sudo iptables -A FORWARD -i wg0 -o wlp0s20f3 -j ACCEPT
+sudo iptables -A FORWARD -i wlp0s20f3 -o wg0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+```
+
+---
+
+### **3. Install persistence**
+
+```bash
+sudo apt update
+sudo apt install iptables-persistent
+sudo netfilter-persistent save
+```
+
+---
+
+### **4. Make forwarding permanent**
+
+```bash
+sudo nano /etc/sysctl.conf
+```
+
+* Ensure:
+
+```text
+net.ipv4.ip_forward = 1
+```
+
+* Apply:
+
+```bash
+sudo sysctl -p
+```
+
+---
+
+### **5. Verify after reboot**
+
+```bash
+sudo reboot
+sudo iptables -t nat -L -n -v
+sudo iptables -L -n -v
+sysctl net.ipv4.ip_forward
+```
+
+* MASQUERADE and FORWARD rules present ✔
+* `net.ipv4.ip_forward = 1` ✔
+
