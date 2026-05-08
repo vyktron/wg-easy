@@ -31,8 +31,13 @@ export const useClientsStore = defineStore('Clients', () => {
   const clients = ref<null | LocalClient[]>(null);
   const clientsPersist = ref<Record<string, ClientPersist>>({});
 
+  const searchParams = ref({
+    filter: undefined as string | undefined,
+  });
+
   const { data: _clients, refresh: _refresh } = useFetch('/api/client', {
     method: 'get',
+    params: searchParams,
   });
 
   // TODO: rewrite
@@ -61,10 +66,11 @@ export const useClientsStore = defineStore('Clients', () => {
       const clientPersist = clientsPersist.value[client.id]!;
 
       // Debug
-      // client.transferRx = this.clientsPersist[client.id].transferRxPrevious + Math.random() * 1000;
-      // client.transferTx = this.clientsPersist[client.id].transferTxPrevious + Math.random() * 1000;
-      // client.latestHandshakeAt = new Date();
-      // this.requiresPassword = true;
+      /* client.transferRx =
+        clientPersist.transferRxPrevious + Math.random() * 1000;
+      client.transferTx =
+        clientPersist.transferTxPrevious + Math.random() * 1000;
+      client.latestHandshakeAt = new Date().toISOString(); */
 
       clientPersist.transferRxCurrent =
         (client.transferRx ?? 0) - clientPersist.transferRxPrevious;
@@ -120,6 +126,7 @@ export const useClientsStore = defineStore('Clients', () => {
       };
     });
 
+    // TODO: move sort to backend
     if (transformedClients !== undefined) {
       transformedClients = sortByProperty(
         transformedClients,
@@ -130,5 +137,11 @@ export const useClientsStore = defineStore('Clients', () => {
 
     clients.value = transformedClients ?? null;
   }
-  return { clients, clientsPersist, refresh, _clients };
+
+  function setSearchQuery(filter: string) {
+    clients.value = null;
+    searchParams.value.filter = filter || undefined;
+  }
+
+  return { clients, clientsPersist, refresh, _clients, setSearchQuery };
 });

@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
-  compatibilityDate: '2025-02-04',
+  compatibilityDate: '2026-02-06',
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/i18n',
@@ -13,7 +13,9 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@eschricht/nuxt-color-mode',
     'radix-vue/nuxt',
+    '@vueuse/nuxt',
     '@nuxt/eslint',
+    '@nuxt/test-utils/module',
   ],
   colorMode: {
     preference: 'system',
@@ -21,6 +23,7 @@ export default defineNuxtConfig({
     classSuffix: '',
     cookieName: 'theme',
   },
+  css: ['~/app.css'],
   i18n: {
     // https://i18n.nuxtjs.org/docs/guide/server-side-translations
     experimental: {
@@ -79,9 +82,19 @@ export default defineNuxtConfig({
         name: '繁體中文（香港）',
       },
       {
+        code: 'zh-TW',
+        language: 'zh-TW',
+        name: '正體中文 (台灣)',
+      },
+      {
         code: 'pl',
         language: 'pl-PL',
         name: 'Polski',
+      },
+      {
+        code: 'cs',
+        language: 'cs-CZ',
+        name: 'Čeština',
       },
       {
         code: 'pt-BR',
@@ -102,6 +115,31 @@ export default defineNuxtConfig({
         code: 'id',
         language: 'id-ID',
         name: 'Bahasa Indonesia',
+      },
+      {
+        code: 'nl',
+        language: 'nl-NL',
+        name: 'Nederlands',
+      },
+      {
+        code: 'nb',
+        language: 'nb-NO',
+        name: 'Norsk bokmål',
+      },
+      {
+        code: 'bg',
+        language: 'bg-BG',
+        name: 'Български',
+      },
+      {
+        code: 'gl',
+        language: 'gl-ES',
+        name: 'Galego',
+      },
+      {
+        code: 'vi',
+        language: 'vi-VN',
+        name: 'Tiếng Việt',
       },
     ],
     defaultLocale: 'en',

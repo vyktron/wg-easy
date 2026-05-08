@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import debug from 'debug';
-import { encodeQR } from 'qr';
 import type { InterfaceType } from '#db/repositories/interface/types';
 
 const WG_DEBUG = debug('WireGuard');
+
+const generateRandomHeaderValue = () =>
+  Math.floor(Math.random() * 2147483642) + 5;
 
 class WireGuard {
   /**
@@ -13,6 +15,21 @@ class WireGuard {
     const wgInterface = await Database.interfaces.get();
     await this.#saveWireguardConfig(wgInterface);
     await this.#syncWireguardConfig(wgInterface);
+    await this.#applyFirewallRules(wgInterface);
+  }
+
+  /**
+   * Apply firewall rules based on current config
+   */
+  async #applyFirewallRules(wgInterface: InterfaceType) {
+    const clients = await Database.clients.getAll();
+    const userConfig = await Database.userConfigs.get();
+    await firewall.rebuildRules(
+      wgInterface,
+      clients,
+      userConfig,
+      !WG_ENV.DISABLE_IPV6
+    );
   }
 
   /**
@@ -61,10 +78,15 @@ class WireGuard {
     WG_DEBUG('Config synced successfully.');
   }
 
-  async getClientsForUser(userId: ID) {
+  async getClientsForUser(userId: ID, filter?: string) {
     const wgInterface = await Database.interfaces.get();
 
-    const dbClients = await Database.clients.getForUser(userId);
+    let dbClients;
+    if (filter?.trim()) {
+      dbClients = await Database.clients.getForUserFiltered(userId, filter);
+    } else {
+      dbClients = await Database.clients.getForUser(userId);
+    }
 
     const clients = dbClients.map((client) => ({
       ...client,
@@ -104,9 +126,16 @@ class WireGuard {
     return clientDump;
   }
 
-  async getAllClients() {
+  async getAllClients(filter?: string) {
     const wgInterface = await Database.interfaces.get();
-    const dbClients = await Database.clients.getAllPublic();
+
+    let dbClients;
+    if (filter?.trim()) {
+      dbClients = await Database.clients.getAllPublicFiltered(filter);
+    } else {
+      dbClients = await Database.clients.getAllPublic();
+    }
+
     const clients = dbClients.map((client) => ({
       ...client,
       latestHandshakeAt: null as Date | null,
@@ -151,11 +180,15 @@ class WireGuard {
 
   async getClientQRCodeSVG({ clientId }: { clientId: ID }) {
     const config = await this.getClientConfiguration({ clientId });
-    return encodeQR(config, 'svg', {
-      ecc: 'high',
-      scale: 2,
-      encoding: 'byte',
-    });
+    return encodeQRCode(config);
+  }
+
+  cleanClientFilename(name: string): string {
+    return name
+      .replace(/[^a-zA-Z0-9_=+.-]/g, '-')
+      .replace(/(-{2,}|-$)/g, '-')
+      .replace(/-$/, '')
+      .substring(0, 32);
   }
 
   async Startup() {
@@ -176,6 +209,24 @@ class WireGuard {
       wgInterface = await Database.interfaces.get();
       WG_DEBUG('New Wireguard Keys generated successfully.');
     }
+
+    if (wgInterface.h1 === '0') {
+      WG_DEBUG('Generating random AmneziaWG obfuscation parameters...');
+      const headers = new Set<number>();
+
+      while (headers.size < 4) {
+        headers.add(generateRandomHeaderValue());
+      }
+      const [h1, h2, h3, h4] = Array.from(headers);
+
+      wgInterface.h1 = String(h1)!;
+      wgInterface.h2 = String(h2)!;
+      wgInterface.h3 = String(h3)!;
+      wgInterface.h4 = String(h4)!;
+
+      Database.interfaces.update(wgInterface);
+    }
+
     WG_DEBUG(`Starting Wireguard Interface ${wgInterface.name}...`);
     await this.#saveWireguardConfig(wgInterface);
     await wg.down(wgInterface.name).catch(() => {});
@@ -195,6 +246,24 @@ class WireGuard {
     });
     await this.#syncWireguardConfig(wgInterface);
     WG_DEBUG(`Wireguard Interface ${wgInterface.name} started successfully.`);
+
+    // Check if firewall was enabled but iptables isn't available
+    if (wgInterface.firewallEnabled) {
+      const enableIpv6 = !WG_ENV.DISABLE_IPV6;
+      const iptablesAvailable = await firewall.isAvailable(enableIpv6);
+      if (!iptablesAvailable) {
+        const requiredTools = enableIpv6 ? 'iptables/ip6tables' : 'iptables';
+        console.warn(
+          `WARNING: Per-Client Firewall is enabled but ${requiredTools} is not available. Disabling firewall feature. Please install ${requiredTools} to use this feature.`
+        );
+        await Database.interfaces.setFirewallEnabled(false);
+        wgInterface.firewallEnabled = false; // Update local copy
+      }
+    }
+
+    WG_DEBUG('Applying firewall rules...');
+    await this.#applyFirewallRules(wgInterface);
+    WG_DEBUG('Firewall rules applied successfully.');
 
     WG_DEBUG('Starting Cron Job...');
     await this.startCronJob();

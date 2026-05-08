@@ -13,8 +13,28 @@ export const wgInterface = sqliteTable('interfaces_table', {
   ipv4Cidr: text('ipv4_cidr').notNull(),
   ipv6Cidr: text('ipv6_cidr').notNull(),
   mtu: int().notNull(),
+  jC: int('j_c').default(7),
+  jMin: int('j_min').default(10),
+  jMax: int('j_max').default(1000),
+  s1: int().default(128),
+  s2: int().default(56),
+  s3: int(),
+  s4: int(),
+  h1: text(),
+  h2: text(),
+  h3: text(),
+  h4: text(),
+  i1: text(),
+  i2: text(),
+  i3: text(),
+  i4: text(),
+  i5: text(),
   // does nothing yet
   enabled: int({ mode: 'boolean' }).notNull(),
+  // Enable per-client firewall filtering via iptables
+  firewallEnabled: int('firewall_enabled', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   createdAt: text('created_at')
     .notNull()
     .default(sql`(CURRENT_TIMESTAMP)`),

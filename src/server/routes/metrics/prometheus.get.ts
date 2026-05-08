@@ -39,8 +39,6 @@ async function getPrometheusResponse() {
   const id = `interface="${wgInterface.name}"`;
 
   const returnText = [
-    '# HELP wg-easy and wireguard metrics',
-    '',
     '# HELP wireguard_configured_peers',
     '# TYPE wireguard_configured_peers gauge',
     `wireguard_configured_peers{${id}} ${wireguardPeerCount}`,
@@ -64,6 +62,7 @@ async function getPrometheusResponse() {
     '# HELP wireguard_latest_handshake_seconds UNIX timestamp seconds of the last handshake',
     '# TYPE wireguard_latest_handshake_seconds gauge',
     `${wireguardLatestHandshakeSeconds.join('\n')}`,
+    '',
   ];
 
   return returnText.join('\n');
