@@ -5,6 +5,12 @@
     state: directory
     mode: "0755"
 
+- name: Ensure wireguard config directory exists
+  ansible.builtin.file:
+    path: "{{ wg_easy_project_path }}/etc-wireguard"
+    state: directory
+    mode: "0755"
+
 - name: Render docker compose definition
   ansible.builtin.template:
     src: "{{ wg_easy_compose_template }}"

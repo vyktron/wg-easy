@@ -1,6 +1,3 @@
-volumes:
-  etc_wireguard:
-
 services:
   wg-easy:
     image: ghcr.io/wg-easy/wg-easy:15.2.2
@@ -14,7 +11,7 @@ services:
       - INIT_PORT={{ wg_easy_init_port }}
       - INSECURE={{ (wg_easy_insecure | bool) | ternary('true', 'false') }}
     volumes:
-      - etc_wireguard:/etc/wireguard
+      - ./etc-wireguard:/etc/wireguard
       - /lib/modules:/lib/modules:ro
     network_mode: "host"
     ports:

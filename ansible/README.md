@@ -86,7 +86,6 @@ sudo iptables -t nat -A POSTROUTING -o [interface] -j MASQUERADE
 sudo iptables -A FORWARD -i wg0 -o [interface] -j ACCEPT
 sudo iptables -A FORWARD -i [interface] -o wg0 -m state --state ESTABLISHED,RELATED -j ACCEPT
 ```
-
 ---
 
 ### **3. Install persistence**
