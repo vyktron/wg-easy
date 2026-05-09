@@ -3,9 +3,9 @@ volumes:
 
 services:
   wg-easy:
-    image: ghcr.io/wg-easy/wg-easy:15
+    image: ghcr.io/wg-easy/wg-easy:15.2.2
     container_name: wg-easy
-    privileged: true  # Allows the container to create and manage network interfaces
+    privileged: false  # Allows the container to create and manage network interfaces
     environment:
       - INIT_ENABLED=true
       - INIT_USERNAME={{ wg_easy_init_username }}

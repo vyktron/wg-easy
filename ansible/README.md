@@ -82,9 +82,9 @@ sudo sysctl -w net.ipv4.ip_forward=1
 ### **2. Add NAT & forwarding rules**
 
 ```bash
-sudo iptables -t nat -A POSTROUTING -o wlp0s20f3 -j MASQUERADE
-sudo iptables -A FORWARD -i wg0 -o wlp0s20f3 -j ACCEPT
-sudo iptables -A FORWARD -i wlp0s20f3 -o wg0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -o [interface] -j MASQUERADE
+sudo iptables -A FORWARD -i wg0 -o [interface] -j ACCEPT
+sudo iptables -A FORWARD -i [interface] -o wg0 -m state --state ESTABLISHED,RELATED -j ACCEPT
 ```
 
 ---
