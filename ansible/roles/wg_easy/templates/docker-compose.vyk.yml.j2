@@ -9,6 +9,7 @@ services:
       - INIT_PASSWORD={{ wg_easy_init_password }}
       - INIT_HOST={{ wg_easy_init_host }}
       - INIT_PORT={{ wg_easy_init_port }}
+      - INIT_DNS={{ wg_easy_init_dns }}
       - INSECURE={{ (wg_easy_insecure | bool) | ternary('true', 'false') }}
     volumes:
       - ./etc-wireguard:/etc/wireguard
